@@ -450,5 +450,70 @@ class GuardTests(unittest.TestCase):
         self.assertIs(type(machine.current), Above)  # guard passes
 
 
+# --- dispatch(EventClass, *args, **kwargs) -------------------------------
+
+
+class DispatchEventArgsTests(unittest.TestCase):
+    def test_dispatch_accepts_event_class_with_positional_args(self):
+        log = Log()
+
+        class Idle(NestedState):
+            pass
+
+        class Above(NestedState):
+            pass
+
+        Idle.transitions = (Transition(TickWithCount, Above),)
+
+        for cls in (Idle, Above):
+            cls.log = log
+
+        machine = StateMachine(Idle)
+        machine.dispatch(TickWithCount, 3)
+        self.assertIs(type(machine.current), Above)
+
+    def test_dispatch_accepts_event_class_with_keyword_args(self):
+        log = Log()
+
+        class Idle(NestedState):
+            def on_event(self, machine, event):
+                if isinstance(event, TickWithCount) and event.n >= 3:
+                    return Above
+                return None
+
+        class Above(NestedState):
+            pass
+
+        Idle.transitions = (Transition(TickWithCount, Above, guard="n >= 3"),)
+
+        for cls in (Idle, Above):
+            cls.log = log
+
+        machine = StateMachine(Idle)
+        machine.dispatch(TickWithCount, n=1)
+        self.assertIs(type(machine.current), Idle)  # guard fails, no transition
+
+        machine.dispatch(TickWithCount, n=3)
+        self.assertIs(type(machine.current), Above)  # guard passes
+
+    def test_dispatch_still_accepts_event_instance(self):
+        log = Log()
+
+        class Idle(NestedState):
+            pass
+
+        class Above(NestedState):
+            pass
+
+        Idle.transitions = (Transition(Go, Above),)
+
+        for cls in (Idle, Above):
+            cls.log = log
+
+        machine = StateMachine(Idle)
+        machine.dispatch(Go())
+        self.assertIs(type(machine.current), Above)
+
+
 if __name__ == "__main__":
     unittest.main()

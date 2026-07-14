@@ -203,7 +203,7 @@ class StateMachine:
             self._instances[state_cls] = instance
         return instance
 
-    def dispatch(self, event: Event) -> None:
+    def dispatch(self, event: Event | type[Event], *args, **kwargs) -> None:
         """Walk the current leaf state's ancestor chain calling on_event
         until one returns a target, then transition:
           1. exit path = current leaf up to (not including) the lowest
@@ -212,7 +212,14 @@ class StateMachine:
           2. entry path = LCA down to target, then descend through
              `initial` chains until reaching a leaf; call on_entered
              root-to-leaf.
+
+        `event` may be an Event instance, or an Event subclass -- in which
+        case it's instantiated as `event(*args, **kwargs)` so callers can
+        write `machine.dispatch(Tick, elapsed=5)` instead of
+        `machine.dispatch(Tick(elapsed=5))`.
         """
+        if isinstance(event, type):
+            event = event(*args, **kwargs)
         current_cls = type(self.current)
         target: type[State] | None = None
         for state_cls in _ancestor_chain(current_cls)[:-1]:

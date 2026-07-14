@@ -42,7 +42,10 @@ No third-party dependencies are pulled in — the library itself has none.
   `machine.dispatch(event)` runs the standard HSM transition algorithm
   (bubble the event up for a handler, exit up to the lowest common
   ancestor, then enter back down to the target, descending through
-  `initial` chains to a leaf).
+  `initial` chains to a leaf). `event` may be an `Event` instance, or an
+  `Event` subclass plus its constructor args —
+  `machine.dispatch(Tick, elapsed=5)` is shorthand for
+  `machine.dispatch(Tick(elapsed=5))`.
 - **`generate_plantuml(root)`** — renders a machine's full hierarchy as a
   `.puml` string (nested `state { }` blocks, `[*] -->` for `initial`
   chains, `A --> B : Event [guard]` for each transition). Paste the output

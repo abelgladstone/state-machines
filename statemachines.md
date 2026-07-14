@@ -81,14 +81,18 @@ class StateMachine:
     instance attributes (e.g. a timer set in on_entered) persist correctly
     across repeated enter/exit/re-enter cycles of the same state.
 
-    dispatch(event): walk the current leaf state's ancestor chain calling
-    on_event until one returns a target, then transition:
+    dispatch(event, *args, **kwargs): walk the current leaf state's
+    ancestor chain calling on_event until one returns a target, then
+    transition:
       1. exit path = current leaf up to (not including) the lowest common
          ancestor of current and target; call on_exited leaf-to-root.
       2. entry path = LCA down to target, then descend through `initial`
          chains until reaching a leaf; call on_entered root-to-leaf.
     This is the standard HSM transition algorithm -- nothing novel, just a
-    clean small implementation of it.
+    clean small implementation of it. `event` may be an Event instance, or
+    an Event subclass -- in which case it's instantiated as
+    `event(*args, **kwargs)`, so `dispatch(Tick, elapsed=5)` works as
+    shorthand for `dispatch(Tick(elapsed=5))`.
     """
 ```
 
